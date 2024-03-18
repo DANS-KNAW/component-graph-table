@@ -9,4 +9,5 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 (async () => {
   await dbIngestJson();
   await esIngestIndex();
+  console.log("[Status]: Ingestion complete! 🎉")
 })();
