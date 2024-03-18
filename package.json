@@ -4,7 +4,7 @@
   "description": "Script to convert graph data to table data with a view to mimic a graph.",
   "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "ts-node src/index.ts"
   },
   "contributors": [
     {
@@ -28,6 +28,7 @@
   "dependencies": {
     "csvtojson": "^2.0.10",
     "dotenv": "^16.4.5",
+    "es7": "npm:@elastic/elasticsearch@^7.17.0",
     "pg": "^8.11.3",
     "progress": "^2.0.3"
   }
