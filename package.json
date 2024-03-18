@@ -1,0 +1,20 @@
+{
+  "name": "component-graph-table",
+  "version": "1.0.0",
+  "description": "Script to convert graph data to table data with a view to mimic a graph.",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "contributors": [
+    {
+      "name": "Gijsjan Brouwer",
+      "url": "https://github.com/Gijsjan"
+    },
+    {
+      "name": "Laurens Tobias",
+      "email": "laurens.tobias@dans.knaw.nl"
+    }
+  ],
+  "license": "ISC"
+}
