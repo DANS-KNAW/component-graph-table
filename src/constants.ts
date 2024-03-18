@@ -10,3 +10,5 @@ export const DELIMITER_TYPES = {
   TSV: "\t",
   PSV: "|",
 };
+// The schema name for the database.
+export const SCHEMA_NAME = "public";
