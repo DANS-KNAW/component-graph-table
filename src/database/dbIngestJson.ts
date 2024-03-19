@@ -1,7 +1,7 @@
 import { Client } from "pg";
-import { SCHEMA_NAME } from "./constants";
+import { SCHEMA_NAME } from "../constants";
 import createQueryView from "./query-view";
-import csvToJson from "./lib/csvToJson";
+import csvToJson from "../lib/csvToJson";
 import ProgressBar from "progress";
 
 /**

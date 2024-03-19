@@ -1,7 +1,7 @@
 import path from "path";
 import dotenv from "dotenv";
-import dbIngestJson from "./dbIngestJson";
-import esIngestIndex from "./esIngestIndex";
+import dbIngestJson from "./database/dbIngestJson";
+import esIngestIndex from "./elasticsearch/esIngestIndex";
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
