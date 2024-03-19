@@ -4,7 +4,8 @@
   "description": "Script to convert graph data to table data with a view to mimic a graph.",
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "start:json": "ts-node src/index.ts --dump-json"
   },
   "contributors": [
     {

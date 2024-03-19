@@ -4,7 +4,6 @@ import createQueryView from "./query-view";
 import csvToJson from "./lib/csvToJson";
 import ProgressBar from "progress";
 
-
 /**
  * Ingests JSON data into the database.
  * Creates the view `view_resource` and ingests the JSON data into the database.
@@ -12,11 +11,12 @@ import ProgressBar from "progress";
  * @returns A Promise that resolves when the ingestion is complete.
  */
 async function dbIngestJson(): Promise<void> {
+  const dump_json = process.argv.includes('--dump-json');
   const client = new Client();
 
   await client.connect();
 
-  const json_files = await csvToJson();
+  const json_files = await csvToJson(dump_json);
 
   // Drop the `view_resource` view if it exists.
   await client.query(`DROP VIEW IF EXISTS view_resource;`);
