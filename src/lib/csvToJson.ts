@@ -10,7 +10,7 @@ interface JsonFilesObjects {
 
 /**
  * Converts CSV files to JSON format.
- * 
+ *
  * @param dump_json - Flag indicating whether to output the JSON files.
  * @returns An object containing the converted JSON files.
  * @throws Error if the files are not of the same type.
@@ -31,9 +31,12 @@ async function csvToJson(dump_json: boolean = false) {
     throw new Error("All files must be of the same type.");
   }
 
-  const bar = new ProgressBar("[Converting]: Turning SV type files to JSON [:current/:total] ", {
-    total: files.length,
-  });
+  const bar = new ProgressBar(
+    "[Converting]: Turning SV type files to JSON [:current/:total] ",
+    {
+      total: files.length,
+    }
+  );
 
   let json_files_object: JsonFilesObjects = {};
 
@@ -47,7 +50,7 @@ async function csvToJson(dump_json: boolean = false) {
     raw_json_file.forEach((row) => {
       for (const column in row) {
         let new_column = column.trim().replace(/[- ]/g, "_");
-        new_column = new_column.replace(/[^a-zA-Z0-9_]/g, "");
+        new_column = new_column.replace(/[^a-zA-Z0-9_#]/g, "");
         new_column = new_column.toLowerCase();
 
         row[new_column] = row[column];
@@ -59,7 +62,6 @@ async function csvToJson(dump_json: boolean = false) {
     let file_name = file.trim().replace(/[- ]/g, "_");
     file_name = file_name.slice(0, file_name.lastIndexOf("."));
     file_name = file_name.toLowerCase();
-
 
     // Output the JSON file if the flag is set to true.
     if (dump_json) {
@@ -74,7 +76,7 @@ async function csvToJson(dump_json: boolean = false) {
         JSON.stringify(raw_json_file)
       );
     }
-    
+
     bar.tick();
 
     // Add the JSON file to the object.
