@@ -22,7 +22,7 @@ async function dbIngestJson(): Promise<void> {
   await client.query(`DROP VIEW IF EXISTS view_resource;`);
 
   const ingest_amount = Object.keys(json_files).length;
-  const bar = new ProgressBar("[Ingest]: Ingesting Tables [:current/:total] :bar", {
+  const bar = new ProgressBar("[Ingest]: Ingesting Tables [:current/:total]", {
     total: ingest_amount,
   });
 

@@ -1,6 +1,5 @@
 import { Client } from "pg";
 import * as es7 from "es7";
-import { MappingTypeMapping } from "es7/api/types";
 import ProgressBar from "progress";
 
 /**
@@ -8,7 +7,7 @@ import ProgressBar from "progress";
  * 
  * @param mappings Optional mappings for the Elasticsearch index.
  */
-const esIngestIndex = async (mappings?: MappingTypeMapping) => {
+const esIngestIndex = async () => {
   const INDEX_NAME = "dans-rda2";
   const ROWS_PER_PAGE = 20;
   let page = 1;
@@ -26,19 +25,16 @@ const esIngestIndex = async (mappings?: MappingTypeMapping) => {
     });
   }
   
-  console.log("[Status]: Checking if index exists 🔎...")
+  console.log("[Status]: Checking if index exists...")
 
   // Check if the index exists and create it if it doesn't
   const indexExists = await esClient.indices.exists({ index: INDEX_NAME });
   if (!indexExists.body) {
     try {
       await esClient.indices.create({
-        index: INDEX_NAME,
-        body: {
-          mappings,
-        },
+        index: INDEX_NAME
       });
-      console.log(`[Status]: Index "${INDEX_NAME}" initialised! 🎉`);
+      console.log(`[Status]: Index "${INDEX_NAME}" initialised!`);
     } catch (err) {
       console.log("[ERROR] initIndex", err);
     }
