@@ -21,14 +21,14 @@ async function csvToJson(dump_json: boolean = false) {
   // Get all extensions of files in the directory
   const file_extensions = files.map((file) => path.extname(file));
 
-  // Check if all files are of the same type
+  // Check if all files are in the delimiter types
   const is_same_file_type = file_extensions.every(
-    (val, i, arr) => val === arr[0]
+    (ext) => ext === ".csv" || ext === ".tsv" || ext === ".psv"
   );
 
   // If not, throw an error
   if (!is_same_file_type) {
-    throw new Error("All files must be of the same type.");
+    throw new Error('All files must be of either type ".csv/.tsv/.psv".');
   }
 
   const bar = new ProgressBar(
@@ -41,9 +41,15 @@ async function csvToJson(dump_json: boolean = false) {
   let json_files_object: JsonFilesObjects = {};
 
   for (const file of files) {
+    // Get the delimiter type of the file
+    const delimiter = path
+      .extname(file)
+      .slice(1)
+      .toUpperCase() as keyof typeof DELIMITER_TYPES;
+
     // Convert the CSV files to JSON based on the delimiter type.
     const raw_json_file = await csv({
-      delimiter: DELIMITER_TYPES.TSV,
+      delimiter: DELIMITER_TYPES[delimiter],
     }).fromFile(path.join(SOURCE_DIR, file));
 
     // Clean the column names and convert them to lowercase.
