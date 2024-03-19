@@ -33,3 +33,10 @@ cp .env.example .env
 ```bash
 pnpm start
 ```
+
+- **(Optional) JSON Dump**  
+In cases where you would like to inspect the converted CSV files, you can simply run this, and it generates a `json` directory with the converted files.
+```bash
+pnpm start:json
+```
+
