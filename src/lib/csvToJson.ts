@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import csv from "csvtojson";
 import ProgressBar from "progress";
+import excelSerialDateToDate from "./excelSerialDateToDate";
 
 interface JsonFilesObjects {
   [key: string]: any;
@@ -59,8 +60,24 @@ async function csvToJson(dump_json: boolean = false) {
         new_column = new_column.replace(/[^a-zA-Z0-9_#]/g, "");
         new_column = new_column.toLowerCase();
 
-        row[new_column] = row[column];
-        delete row[column];
+        // Check if new_column is identical to column name
+        // If not, delete the old column name
+        if (new_column !== column) {
+          row[new_column] = row[column];
+          delete row[column];
+        }
+      }
+
+      // Check if the "dc_date" column is a 5-digit number
+      // Note: I feel like it should be changed in the dataset itself.
+      // But for now I will keep it to make sure the data is consistent.
+      if (
+        "dc_date" in row &&
+        typeof row["dc_date"] === "string" &&
+        /^\d{5}$/.test(row["dc_date"])
+      ) {
+        const serialDateNumber = parseInt(row["dc_date"], 10);
+        row["dc_date"] = excelSerialDateToDate(serialDateNumber);
       }
     });
 
