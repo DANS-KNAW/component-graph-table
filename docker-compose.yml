@@ -38,20 +38,16 @@ services:
       - elasticsearch
 
   db:
-    # container_name: postgis
-    env_file:
-      - .env
     image: postgis/postgis:15-master
+    environment:
+    # Get envs from .env file
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - 5432:5432
     volumes:
       - postgresql_data:/var/lib/postgresql/data
-
-  adminer:
-    # container_name: adminer
-    image: adminer
-    ports:
-      - 8080:8080
 
 volumes:
   elasticsearch-data: {}
