@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import dbIngestJson from "./database/dbIngestJson";
 import esIngestIndex from "./elasticsearch/esIngestIndex";
-import { env } from "process";
-import { throwErrorAndLog } from "./lib/customLog";
+import { customLog, throwErrorAndLog } from "./lib/customLog";
 import DelimitedToJSON from "./lib/delimited-to-json";
+import { ConvertedFiles, RawJSONData } from "./types/RawJsonData";
+import DatabaseProvisioner from "./lib/DatabaseProvisioner";
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
@@ -39,7 +39,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
     return LOCAL_SOURCE;
   };
 
-  const fileToJson = async (): Promise<void> => {
+  const fileToJson = async (): Promise<ConvertedFiles> => {
     const ALLOWED_EXTENSIONS = [".csv", ".tsv", ".json"];
 
     const files = fs.readdirSync(datasetLocation());
@@ -59,13 +59,23 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 
     const converter = new DelimitedToJSON(datasetLocation());
 
-    const x = await converter.convertFiles(files);
-
-    
+    return converter.convertFiles(files);
   };
 
   // Ingest JSON data into database.
-  const dbIngest = async (): Promise<void> => {};
+  const dbIngest = async (files: ConvertedFiles): Promise<void> => {
+    const db = new DatabaseProvisioner({
+      host: process.env.DB_HOST ?? "localhost",
+      port: parseInt(process.env.DB_PORT ?? "5432"),
+      user: process.env.DB_USER ?? "postgres",
+      password: process.env.DB_PASS ?? "",
+      database: process.env.DB_NAME ?? "postgres",
+    });
+
+    await db.connect();
+    await db.createTablesAndInsert(files);
+    await db.disconnect();
+  };
 
   // Create VIEW for JSON data.
   const dbCreateView = async (): Promise<void> => {};
@@ -74,17 +84,36 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
   const esIngest = async (): Promise<void> => {};
 
   try {
-    console.log("[Status]: Starting ingestion process...");
-    console.log("[Status]: Converting files to JSON...");
-    await fileToJson();
+    customLog("[Status]: Initializing ingestion process...");
+    customLog("[Status]: Convert files to JSON...");
+
+    const files = await fileToJson();
+
+    customLog("[Status]: Ingesting JSON data into database...");
+
+    await dbIngest(files);
+
+    const end = Date.now();
+    const seconds = ((end - start) / 1000).toFixed(2);
+
+    customLog(`[Status]: Ingestion complete! Total time ${seconds}s 🎉`, {
+      color: "green",
+    });
   } catch (error) {
-    if (process.env.DEBUG === "true") {
+    const LogLevel = {
+      NONE: "NONE",
+      DEBUG: "DEBUG",
+      INFO: "INFO",
+    } as const;
+
+    type LogLevelType = keyof typeof LogLevel | string;
+    const loggingLevel: LogLevelType = process.env.LOGGING ?? "NONE";
+
+    if (loggingLevel === LogLevel.DEBUG) {
       console.error(error);
     }
+    customLog("[Error]: Ingestion failed. Check logs for more information.", {
+      color: "red",
+    });
   }
-
-  const end = Date.now();
-  const seconds = ((end - start) / 1000).toFixed(2);
-
-  console.log(`[Status]: Ingestion complete! Total time ${seconds}s 🎉`);
 })();
