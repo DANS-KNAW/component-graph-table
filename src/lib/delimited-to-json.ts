@@ -3,8 +3,7 @@ import path from "path";
 import csv from "csvtojson";
 import { DELIMITER_TYPES } from "../constants";
 import { customLog, throwErrorAndLog } from "./customLog";
-
-type RawJSONData = { [key: string]: any };
+import { ConvertedFiles, RawJSONData } from "../types/RawJsonData";
 
 class DelimitedToJSON {
   private source: string;
@@ -13,6 +12,12 @@ class DelimitedToJSON {
     this.source = source; // Note: This is temporary. Should be replaced with stream for dynamic data source locations.
   }
 
+  /**
+   * Converts a delimited file to an array of JSON objects.
+   * 
+   * @param file - The path of the delimited file to convert.
+   * @returns A promise that resolves to an array of JSON objects representing the data in the file.
+   */
   public async convertFile(file: string): Promise<RawJSONData[]> {
     const delimiter = this.determineDelimiter(file);
 
@@ -33,14 +38,37 @@ class DelimitedToJSON {
     return jsonData;
   }
 
-  public async convertFiles(files: string[]): Promise<RawJSONData[][]> {
-    const convertedFiles: RawJSONData[][] = [];
-    for (let i = 0; i < files.length; i++) {
-      convertedFiles.push(await this.convertFile(files[i]));
+  /**
+   * Converts an array of file paths to JSON format.
+   * @param files - An array of file paths to be converted.
+   * @returns A promise that resolves to an object containing the converted files.
+   */
+  public async convertFiles(files: string[]): Promise<ConvertedFiles> {
+    const convertedFiles: ConvertedFiles = {};
+    for (const file of files) {
+      const fileName = path
+        .parse(file)
+        .name.toLowerCase()
+        .replace(/[- ]/g, "_");
+
+      const convertedFile = await this.convertFile(file);
+
+      if (fileName in convertedFiles) {
+        throwErrorAndLog(`[Error]: Duplicate file name found: ${fileName}`);
+      }
+
+      convertedFiles[fileName] = convertedFile;
     }
     return convertedFiles;
   }
 
+  /**
+   * Sanitizes the headers of the given data by removing leading/trailing spaces, replacing hyphens and spaces with underscores,
+   * and converting the headers to lowercase. Also sets empty values to null.
+   * 
+   * @param data - The raw JSON data.
+   * @returns The sanitized JSON data.
+   */
   protected sanitizeHeaders(data: RawJSONData[]) {
     const cleanData = data.map((row) => {
       const cleanRow: RawJSONData = {};
@@ -110,10 +138,19 @@ class DelimitedToJSON {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  /**
+   * Determines the delimiter used in the specified file.
+   * 
+   * @param file - The file path.
+   * @returns The estimated delimiter.
+   * @throws An error if the delimiter cannot be determined.
+   */
   private determineDelimiter(file: string): string {
-    const rawData = fs.readFileSync(path.join(this.source, file), {
-      encoding: "utf-8",
-    });
+    const rawData = fs
+      .readFileSync(path.join(this.source, file), {
+        encoding: "utf-8",
+      })
+      .split("\n")[0];
 
     const rowCount = rawData.split("\n").length;
     let maxFieldCount = 1;

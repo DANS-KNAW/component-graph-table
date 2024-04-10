@@ -33,10 +33,11 @@ export const customLog = (
  * P.s. I hate TypeScript.
  *
  * @param message - The error message.
+ * @param error - The optional error object. Note: this will only be logged if debug mode is enabled.
  * @returns This function never returns a value.
  * @throws {Error} - The error with the specified message.
  */
-export function throwErrorAndLog(message: string): never {
+export function throwErrorAndLog(message: string, error?: any): never {
   customLog(message, { color: "red" });
-  throw new Error(message);
+  throw new Error(error ?? message);
 }
