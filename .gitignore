@@ -2,3 +2,4 @@ node_modules
 .env
 data_sources
 json
+.DS_Store
