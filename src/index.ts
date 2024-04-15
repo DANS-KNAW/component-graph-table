@@ -1,11 +1,12 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import esIngestIndex from "./elasticsearch/esIngestIndex";
-import { customLog, throwErrorAndLog } from "./lib/customLog";
+import { customLog, throwErrorAndLog } from "./lib/custom-log";
 import DelimitedToJSON from "./lib/delimited-to-json";
-import { ConvertedFiles, RawJSONData } from "./types/RawJsonData";
-import DatabaseProvisioner from "./lib/DatabaseProvisioner";
+import { ConvertedFiles } from "./types/rawJsonData";
+import DatabaseProvisioner from "./lib/database-provisioner";
+import { Projects } from "./types/databaseTypes";
+import EsManager from "./lib/es-manager";
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
@@ -39,7 +40,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
     return LOCAL_SOURCE;
   };
 
-  const fileToJson = async (): Promise<ConvertedFiles> => {
+  const filesToJson = async (): Promise<ConvertedFiles> => {
     const ALLOWED_EXTENSIONS = [".csv", ".tsv", ".json"];
 
     const files = fs.readdirSync(datasetLocation());
@@ -62,36 +63,44 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
     return converter.convertFiles(files);
   };
 
-  // Ingest JSON data into database.
-  const dbIngest = async (files: ConvertedFiles): Promise<void> => {
-    const db = new DatabaseProvisioner({
-      host: process.env.DB_HOST ?? "localhost",
-      port: parseInt(process.env.DB_PORT ?? "5432"),
-      user: process.env.DB_USER ?? "postgres",
-      password: process.env.DB_PASS ?? "",
-      database: process.env.DB_NAME ?? "postgres",
-    });
-
-    await db.connect();
-    await db.createTablesAndInsert(files);
-    await db.disconnect();
-  };
-
-  // Create VIEW for JSON data.
-  const dbCreateView = async (): Promise<void> => {};
-
-  // Ingest rows into Elasticsearch.
-  const esIngest = async (): Promise<void> => {};
-
   try {
     customLog("[Status]: Initializing ingestion process...");
     customLog("[Status]: Convert files to JSON...");
 
-    const files = await fileToJson();
+    const files = await filesToJson();
 
     customLog("[Status]: Ingesting JSON data into database...");
 
-    await dbIngest(files);
+    const db = new DatabaseProvisioner(
+      {
+        host: process.env.DB_HOST ?? "localhost",
+        port: parseInt(process.env.DB_PORT ?? "5432"),
+        user: process.env.DB_USER ?? "postgres",
+        password: process.env.DB_PASS ?? "",
+        database: process.env.DB_NAME ?? "postgres",
+      },
+      (process.env.PROJECT as Projects) ?? "NONE"
+    );
+
+    await db.connect();
+    await db.createTablesAndInsert(files);
+    await db.createQueryView();
+
+    const index = process.env.ES_INDEX ?? undefined;
+
+    if (!index) {
+      throwErrorAndLog("[Error]: No Elasticsearch index specified.");
+    }
+
+    const es = new EsManager(index, db);
+
+    customLog("[Status]: Ingesting data into Elasticsearch...");
+
+    await es.createIndex();
+    await es.indexViewRows();
+
+    await db.disconnect();
+    es.disconnect();
 
     const end = Date.now();
     const seconds = ((end - start) / 1000).toFixed(2);

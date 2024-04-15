@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import csv from "csvtojson";
 import { DELIMITER_TYPES } from "../constants";
-import { customLog, throwErrorAndLog } from "./customLog";
-import { ConvertedFiles, RawJSONData } from "../types/RawJsonData";
+import { customLog, throwErrorAndLog } from "./custom-log";
+import { ConvertedFiles, RawJSONData } from "../types/rawJsonData";
 
 class DelimitedToJSON {
   private source: string;
@@ -14,7 +14,7 @@ class DelimitedToJSON {
 
   /**
    * Converts a delimited file to an array of JSON objects.
-   * 
+   *
    * @param file - The path of the delimited file to convert.
    * @returns A promise that resolves to an array of JSON objects representing the data in the file.
    */
@@ -65,7 +65,7 @@ class DelimitedToJSON {
   /**
    * Sanitizes the headers of the given data by removing leading/trailing spaces, replacing hyphens and spaces with underscores,
    * and converting the headers to lowercase. Also sets empty values to null.
-   * 
+   *
    * @param data - The raw JSON data.
    * @returns The sanitized JSON data.
    */
@@ -74,7 +74,11 @@ class DelimitedToJSON {
       const cleanRow: RawJSONData = {};
 
       for (const column in row) {
-        const cleanColumn = column.trim().replace(/[- ]/g, "_").toLowerCase();
+        const cleanColumn = column
+          .trim()
+          .replace(/[()]/g, "")
+          .replace(/[- ]/g, "_")
+          .toLowerCase();
 
         cleanRow[cleanColumn] = row[column];
 
@@ -140,7 +144,7 @@ class DelimitedToJSON {
 
   /**
    * Determines the delimiter used in the specified file.
-   * 
+   *
    * @param file - The file path.
    * @returns The estimated delimiter.
    * @throws An error if the delimiter cannot be determined.
