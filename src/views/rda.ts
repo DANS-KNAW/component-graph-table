@@ -15,7 +15,6 @@ export const workflowJoin = `
     ) AS resource_workflow USING (uuid_rda)
 `;
 
-
 export const resourceRightsJoin = `
     LEFT JOIN (
     SELECT
