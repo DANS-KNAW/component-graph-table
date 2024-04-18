@@ -33,7 +33,6 @@ class EsManager {
 
   /**
    * Creates an index in ElasticSearch if it doesn't already exist.
-   * @returns A Promise that resolves to void.
    */
   public async createIndex(): Promise<void> {
     try {
@@ -44,6 +43,13 @@ class EsManager {
       if (!indexExists.body) {
         await this.client.indices.create({
           index: this.indexName,
+          body: {
+            mappings: {
+              properties: {
+                dc_date: { type: "date" },
+              },
+            },
+          },
         });
       }
     } catch (error) {
@@ -54,7 +60,7 @@ class EsManager {
   /**
    * Indexes the view rows into Elasticsearch.
    *
-   * @returns A Promise that resolves to void.
+   * @throws If there is an error while indexing the view rows.
    */
   public async indexViewRows(): Promise<void> {
     const rowsPerPage = 20;
@@ -71,6 +77,19 @@ class EsManager {
          * @todo Best possible solution is to have an method that infers the id from the view.
          */
         for (const row of results.rows) {
+          // Check if the row contains any value is string "NULL" and replace it with actual null value.
+          // The row can have any depth of nested objects check for all the values.
+          const replaceNull = (row: any) => {
+            for (const key in row) {
+              if (row[key] === "NULL") {
+                row[key] = null;
+              } else if (typeof row[key] === "object") {
+                replaceNull(row[key]);
+              }
+            }
+          };
+          replaceNull(row);
+
           await this.client.index({
             index: this.indexName,
             body: row,
@@ -86,6 +105,7 @@ class EsManager {
       }
     } catch (error) {
       this.dbManeger.disconnect();
+      this.disconnect();
       throwErrorAndLog(`[Error]: Could not index row in Elastic`, error);
     }
   }
