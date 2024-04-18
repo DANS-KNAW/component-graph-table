@@ -1,24 +1,23 @@
-import { Client } from "pg";
 import {
-  workflowJoin,
-  resourceRightsJoin,
-  relationTypeJoin,
-  keywordsJoin,
-  individualJoin,
-  institutionsJoin,
   pathwaysJoin,
+  workflowsJoin,
+  relationsJoin,
+  rightsJoin,
+  subjectsJoin,
   workingGroupsJoin,
   interestGroupsJoin,
+  individualJoin,
+  institutionsJoin,
 } from "./rda";
 
 export const rdaJoins = [
-  workflowJoin,
-  resourceRightsJoin,
-  relationTypeJoin,
-  keywordsJoin,
-  individualJoin,
-  institutionsJoin,
   pathwaysJoin,
+  workflowsJoin,
+  relationsJoin,
+  rightsJoin,
+  subjectsJoin,
   workingGroupsJoin,
   interestGroupsJoin,
+  individualJoin,
+  institutionsJoin
 ];
