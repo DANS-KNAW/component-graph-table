@@ -4,6 +4,8 @@ import csv from "csvtojson";
 import { DELIMITER_TYPES } from "../constants";
 import { customLog, throwErrorAndLog } from "./custom-log";
 import { ConvertedFiles, RawJSONData } from "../types/rawJsonData";
+import { Transform, TransformCallback } from "stream";
+import { formatISO, isValid, parse } from "date-fns";
 
 class DelimitedToJSON {
   private source: string;
@@ -21,9 +23,16 @@ class DelimitedToJSON {
   public async convertFile(file: string): Promise<RawJSONData[]> {
     const delimiter = this.determineDelimiter(file);
 
+    const filePath = path.join(this.source, file);
+
+    const readStream = fs
+      .createReadStream(filePath)
+      .pipe(await this.preProcessFile());
+
     const rawJson: RawJSONData[] = await csv({
       delimiter,
-    }).fromFile(path.join(this.source, file));
+      nullObject: true,
+    }).fromStream(readStream);
 
     const jsonData = this.sanitizeHeaders(rawJson);
 
@@ -62,6 +71,20 @@ class DelimitedToJSON {
     return convertedFiles;
   }
 
+  private async preProcessFile() {
+    try {
+      return new Transform({
+        transform(chunk: Buffer, encoding: never, callback: TransformCallback) {
+          let transformedChunk = chunk.toString().replace(/"/g, '\\"');
+          this.push(transformedChunk);
+          callback();
+        },
+      });
+    } catch (error) {
+      throwErrorAndLog(`[Error]: Could not preprocess file`, error);
+    }
+  }
+
   /**
    * Sanitizes the headers of the given data by removing leading/trailing spaces, replacing hyphens and spaces with underscores,
    * and converting the headers to lowercase. Also sets empty values to null.
@@ -69,7 +92,7 @@ class DelimitedToJSON {
    * @param data - The raw JSON data.
    * @returns The sanitized JSON data.
    */
-  protected sanitizeHeaders(data: RawJSONData[]) {
+  private sanitizeHeaders(data: RawJSONData[]) {
     const cleanData = data.map((row) => {
       const cleanRow: RawJSONData = {};
 
@@ -103,9 +126,31 @@ class DelimitedToJSON {
    * This method depends on a method to identify the types of the data.
    */
   private normalizeDates(date: string | null): string | null {
-    if (typeof date === "string" && /^\d{5}$/.test(date)) {
-      const serialDateNumber = parseInt(date, 10);
-      return this.excelSerialDateToDate(serialDateNumber);
+    if (typeof date === "string") {
+      date = date.trim();
+      if (/^\d{5}$/.test(date)) {
+        const serialDateNumber = parseInt(date, 10);
+        date = this.excelSerialDateToDate(serialDateNumber);
+      }
+
+      const regex = /^\d{1,2}-\d{1,2}-\d{4}$/;
+
+      // Check if dateStr matches the 'dd-MM-yyyy' format
+      if (!regex.test(date)) {
+        throwErrorAndLog(`[Error]: Invalid date format: ${date}`);
+      }
+
+      // Attempt to parse the date string. Note: We need to define custom parsing logic to handle single digit day/month.
+      const parts = date.split("-").map((part) => parseInt(part, 10));
+      const dateParsed = new Date(parts[2], parts[1] - 1, parts[0]); // JavaScript Date expects year, month (0-indexed), day
+
+      // Validate if the parsed date is valid
+      if (!isValid(dateParsed)) {
+        throwErrorAndLog(`[Error]: Invalid date: ${date}`);
+      }
+
+      // Format the date to ISO 8601 format
+      return formatISO(dateParsed);
     }
     return date;
   }
