@@ -257,4 +257,15 @@ export const institutionsJoin = `
         GROUP BY individual_resource.uuid_resource
     ) AS institutions USING (uuid_rda)
 `;
-//grep rda_graph:PID_0129
+
+export const uriTypeJoin = `
+    LEFT JOIN (
+        SELECT
+            uuid_uritype,
+            json_build_object(
+                'uritype', uri_type.uritype,
+                'description', uri_type.description
+            ) AS uritype
+        FROM uri_type
+    ) AS uritype USING (uuid_uritype)
+`;

@@ -8,6 +8,7 @@ import {
   interestGroupsJoin,
   individualJoin,
   institutionsJoin,
+  uriTypeJoin,
 } from "./rda";
 
 export const rdaJoins = [
@@ -19,5 +20,6 @@ export const rdaJoins = [
   workingGroupsJoin,
   interestGroupsJoin,
   individualJoin,
-  institutionsJoin
+  institutionsJoin,
+  uriTypeJoin,
 ];
