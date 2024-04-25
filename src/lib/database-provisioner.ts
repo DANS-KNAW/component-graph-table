@@ -1,6 +1,6 @@
 import { Client, QueryResult } from "pg";
 import { ConvertedFiles, RawJSONData } from "../types/rawJsonData";
-import { throwErrorAndLog } from "./custom-log";
+import { customLog, throwErrorAndLog } from "./custom-log";
 import { DbCredentials, ViewConfig, Projects } from "../types/databaseTypes";
 import { rdaJoins } from "../views";
 
@@ -67,13 +67,7 @@ class DatabaseProvisioner {
     );
 
     for (const [tableName, data] of Object.entries(files)) {
-      const tableExists = await this.client.query(
-        `SELECT to_regclass('${tableName}')`
-      );
-
-      if (tableExists.rows[0].to_regclass !== null) {
-        await this.client.query(`DROP TABLE ${tableName}`);
-      }
+      await this.client.query(`DROP TABLE IF EXISTS ${tableName}`);
 
       const columns = this.determineColumns(data);
       const createTableQuery = this.generateCreateTableQuery(
@@ -94,6 +88,18 @@ class DatabaseProvisioner {
         );
       }
 
+      if (
+        data.length === 1 &&
+        Object.values(data[0]).every((value) => value === null)
+      ) {
+        customLog(
+          `[Warning]: Skipping table data: ${tableName} as it has one row with all null values.\nAssuming this is an empty table`,
+          {
+            color: "yellow",
+          }
+        );
+        continue;
+      }
       await this.insertData(tableName, data);
     }
   }
