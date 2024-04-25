@@ -34,7 +34,7 @@ class DelimitedToJSON {
       nullObject: true,
     }).fromStream(readStream);
 
-    const jsonData = this.sanitizeHeaders(rawJson);
+    let jsonData = this.sanitizeHeaders(rawJson);
 
     // Currently hardcoded column `dc_date` to be normalized.
     // This should be replaced after a method for identifying column types is implemented.
@@ -43,6 +43,16 @@ class DelimitedToJSON {
         row["dc_date"] = this.normalizeDates(row["dc_date"]);
       }
     });
+
+    if (jsonData.length === 0) {
+      const file = fs.readFileSync(filePath, { encoding: "utf-8" });
+      const headers = file.split("\n")[0].split(delimiter);
+      const emptyData: { [key: string]: null } = {};
+      headers.forEach((header) => {
+        emptyData[header] = null;
+      });
+      jsonData = this.sanitizeHeaders([emptyData]);
+    }
 
     return jsonData;
   }
