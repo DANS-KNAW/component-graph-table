@@ -10,6 +10,8 @@ import EsManager from "./lib/es-manager";
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
+const purge = process.argv.includes("--purge") ?? false;
+
 (async () => {
   const start = Date.now();
 
@@ -96,7 +98,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 
     customLog("[Status]: Ingesting data into Elasticsearch...");
 
-    await es.createIndex();
+    await es.createIndex(purge);
     await es.indexViewRows();
 
     await db.disconnect();

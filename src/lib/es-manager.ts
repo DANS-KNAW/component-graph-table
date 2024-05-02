@@ -34,11 +34,17 @@ class EsManager {
   /**
    * Creates an index in ElasticSearch if it doesn't already exist.
    */
-  public async createIndex(): Promise<void> {
+  public async createIndex(purge: boolean = false): Promise<void> {
     try {
       const indexExists = await this.client.indices.exists({
         index: this.indexName,
       });
+
+      if (indexExists.body && purge) {
+        await this.client.indices.delete({
+          index: this.indexName,
+        });
+      }
 
       if (!indexExists.body) {
         await this.client.indices.create({

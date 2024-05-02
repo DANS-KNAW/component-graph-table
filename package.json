@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "start:json": "ts-node src/index.ts --dump-json"
+    "purge": "ts-node src/index.ts --purge"
   },
   "contributors": [
     {
