@@ -6,6 +6,8 @@ import { customLog, throwErrorAndLog } from "./custom-log";
 import { ConvertedFiles, RawJSONData } from "../types/rawJsonData";
 import { Transform, TransformCallback } from "stream";
 import { formatISO, isValid, parse } from "date-fns";
+import capitalizeFirstChar from "./capitalize-first-char";
+import { iso6393 } from "../../data/lang";
 
 class DelimitedToJSON {
   private source: string;
@@ -39,8 +41,70 @@ class DelimitedToJSON {
     // Currently hardcoded column `dc_date` to be normalized.
     // This should be replaced after a method for identifying column types is implemented.
     jsonData.forEach((row) => {
-      if ("dc_date" in row) {
-        row["dc_date"] = this.normalizeDates(row["dc_date"]);
+      if (file === "Resource.tsv") {
+        if ("dc_date" in row) {
+          row["dc_date"] = this.normalizeDates(row["dc_date"]);
+        }
+
+        if ("dc_type" in row) {
+          const rawType: string | null = row["dc_type"];
+
+          if (rawType) {
+            const type = rawType.split("/").pop();
+
+            if (type) {
+              const dcType = capitalizeFirstChar(
+                type
+                  .split(/(?=[A-Z])/)
+                  .join(" ")
+                  .toLowerCase()
+              );
+
+              delete row["dc_type"];
+              row["dc_type"] = dcType;
+            }
+          }
+        }
+      }
+
+      if ("dc_language" in row) {
+        const languageCode: string | null = row["dc_language"];
+
+        if (languageCode) {
+          // Check if the language code is inside the languageCodes alpha3 property.
+          let language = iso6393.find(
+            (lang) => lang.iso6393 === languageCode.trim()
+          );
+
+          // If the language is not found, log a warning.
+          if (!language) {
+            customLog(`[Warning]: Language code not found: ${languageCode}`, {
+              color: "yellow",
+            });
+          }
+
+          // If the language is found, replace the language code with the English name.
+          if (language) {
+            delete row["dc_language"];
+            row["dc_language"] = language.name;
+          }
+        }
+      }
+
+      if (file === "Relation.tsv") {
+        if ("relation_type" in row) {
+          const rawRelationType: string = row["relation_type"];
+
+          const relationType = capitalizeFirstChar(
+            rawRelationType
+              .split(/(?=[A-Z])/)
+              .join(" ")
+              .toLowerCase()
+          );
+
+          delete row["relation_type"];
+          row["relation_type"] = relationType;
+        }
       }
     });
 
