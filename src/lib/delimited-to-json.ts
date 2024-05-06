@@ -65,6 +65,10 @@ class DelimitedToJSON {
             }
           }
         }
+
+        if ("source" in row) {
+          row["source"] = "RDA publication";
+        }
       }
 
       if ("dc_language" in row) {
@@ -174,7 +178,7 @@ class DelimitedToJSON {
         const cleanColumn = column
           .trim()
           .replace(/[()]/g, "")
-          .replace(/[- ]/g, "_")
+          .replace(/[-. ]/g, "_")
           .toLowerCase();
 
         cleanRow[cleanColumn] = row[column];
