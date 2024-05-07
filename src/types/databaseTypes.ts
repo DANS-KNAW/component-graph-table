@@ -12,4 +12,4 @@ export interface ViewConfig {
   viewResource: string;
 }
 
-export type Projects = "RDA" | "FC4E";
+export type Projects = "RDA" | "CAT";

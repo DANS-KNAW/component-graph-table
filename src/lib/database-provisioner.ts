@@ -45,10 +45,10 @@ class DatabaseProvisioner {
           viewResource: "view_resource",
           joins: rdaJoins,
         };
-      case "FC4E":
+      case "CAT":
         return {
-          targetTable: "fc4e",
-          viewResource: "fc4e_view",
+          targetTable: "cat",
+          viewResource: "cat_view",
           joins: [],
         };
       default:
