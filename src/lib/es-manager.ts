@@ -69,7 +69,7 @@ class EsManager {
    * @throws If there is an error while indexing the view rows.
    */
   public async indexViewRows(): Promise<void> {
-    const rowsPerPage = 20;
+    const rowsPerPage = 1000;
     let page = 0;
 
     try {

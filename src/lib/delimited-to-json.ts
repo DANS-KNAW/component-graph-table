@@ -40,7 +40,9 @@ class DelimitedToJSON {
 
     // Currently hardcoded column `dc_date` to be normalized.
     // This should be replaced after a method for identifying column types is implemented.
+    let count = 0;
     jsonData.forEach((row) => {
+      count++;
       if (file === "Resource.tsv") {
         if ("dc_date" in row) {
           row["dc_date"] = this.normalizeDates(row["dc_date"]);
@@ -108,6 +110,17 @@ class DelimitedToJSON {
 
           delete row["relation_type"];
           row["relation_type"] = relationType;
+        }
+      }
+
+      if (file === "Cat Assesments.tsv") {
+        if ("scalability" in row) {
+          const rawScalability: string = row["scalability"];
+
+          const scalability = rawScalability.replace(/^\\\"|\\\"$/g, '');
+
+          delete row["scalability"];
+          row["scalability"] = scalability;
         }
       }
     });

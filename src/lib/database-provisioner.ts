@@ -47,7 +47,7 @@ class DatabaseProvisioner {
         };
       case "CAT":
         return {
-          targetTable: "cat",
+          targetTable: "cat_assesments",
           viewResource: "cat_view",
           joins: [],
         };
